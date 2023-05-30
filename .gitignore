@@ -5,8 +5,10 @@ terraform-iac/
 .ebextensions/
 .github/
 
-# json output
+# data output files
 *.json
+*.csv
+*.xlsx
 
 # Terraform IaC
 *.terraform*
