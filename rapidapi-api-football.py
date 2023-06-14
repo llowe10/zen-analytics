@@ -10,6 +10,10 @@ team_map = {
     "Manchester City": 50
 }
 
+league_map = {
+    "UEFA Champions League": 2
+}
+
 headers = {
     "X-RapidAPI-Key": "fdcd0a1831msh855607adde1935cp19bd72jsn07dca62515d5",
     "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com",
@@ -73,6 +77,8 @@ def get_player_statistics(id, season):
     # print(df)
 
 def get_player_statistics_by_team(team, season):
+    path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-playerstats-' + str(team) + '-' + season + '.xlsx'
+
     url = "https://api-football-v1.p.rapidapi.com/v3/players"
 
     querystring = {"team":team, "season":season}
@@ -145,9 +151,57 @@ def get_player_statistics_by_team(team, season):
     
     # stats.fillna(value=np.nan, inplace=True)
     stats.fillna(value=0, inplace=True) # replace None of NaN in same DataFrame
-    print(stats)
-    # print(response.json())
+    # print(stats)
+
+    ### export data
+    if os.path.isfile(path):
+        print("\nexporting {0} data for {1} season...".format(team, season))
+        with pd.ExcelWriter(path, mode='a', if_sheet_exists="overlay") as writer:  
+            stats.to_excel(writer, sheet_name='Sheet1', startrow=writer.sheets["Sheet1"].max_row, index=False, header=False)
+    else:
+        print("\ncreating {0} data file for {1} season...".format(team, season))
+        stats.to_excel(path, index=False, header=True)
+    print("...export completed.")
+
+def get_statistics_by_fixture(file_name, fixture_id):
+    path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-fixturestats-' + file_name + '.xlsx'
+    url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics"
+    querystring = {"fixture":fixture_id} 
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    ### set columns ###
+    cols = ['Team Name']
+    for team in response.json()['response']:
+        for stat in team["statistics"]:
+            cols.append(stat["type"])
+    stats_pd = pd.DataFrame(columns=cols)
+
+    ### get stat values ###
+    for team in response.json()['response']:
+        row = {'Team Name': team["team"]["name"]}
+        for stat in team["statistics"]:
+            row[stat["type"]] = stat["value"]
+        stats_pd.loc[len(stats_pd)] = row
+    
+    # stats.fillna(value=np.nan, inplace=True) # replace None with NaN in same DataFrame
+    stats_pd.fillna(value=0, inplace=True) # replace None with zero in same DataFrame
+    print(stats_pd)
+
+    ### export data
+    if os.path.isfile(path):
+        print("\nexporting data for fixture {}...".format(fixture_id))
+        with pd.ExcelWriter(path, mode='a', if_sheet_exists="overlay") as writer:  
+            stats_pd.to_excel(writer, sheet_name='Sheet1', startrow=writer.sheets["Sheet1"].max_row, index=False, header=False)
+    else:
+        print("\ncreating data file for fixture {}...".format(fixture_id))
+        stats_pd.to_excel(path, index=False, header=True)
+    print("...export completed.")
+
+#######################################################################################################################################
 
 if __name__ == "__main__":
     # get_team_statistics("39", "2020", "50")
-    get_player_statistics_by_team(team_map["Manchester City"], "2019")
+    # get_player_statistics_by_team(team_map["Manchester City"], "2019")
+
+    # 1027909 : 2023 UEFA Champions League Final
+    get_statistics_by_fixture("2023_UCL_Final", "1027909")

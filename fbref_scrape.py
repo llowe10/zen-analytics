@@ -98,6 +98,9 @@ def get_squad_stats(site, table_id, file_name, season):
 
 if __name__ == "__main__":
     # get_player_stats('https://fbref.com/en/squads/b8fd03ef/2022-2023/all_comps/Manchester-City-Stats-All-Competitions','stats_standard_combined','man_city.csv')
-    get_squad_stats('https://fbref.com/en/comps/9/gca/Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2022-23')
-    get_squad_stats('https://fbref.com/en/comps/9/2021-2022/gca/2021-2022-Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2021-22')
-    get_squad_stats('https://fbref.com/en/comps/9/2020-2021/gca/2020-2021-Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2020-21')
+
+    # get_squad_stats('https://fbref.com/en/comps/9/gca/Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2022-23')
+    # get_squad_stats('https://fbref.com/en/comps/9/2021-2022/gca/2021-2022-Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2021-22')
+    # get_squad_stats('https://fbref.com/en/comps/9/2020-2021/gca/2020-2021-Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2020-21')
+    # get_squad_stats('https://fbref.com/en/comps/9/2019-2020/gca/2019-2020-Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2019-20')
+    # get_squad_stats('https://fbref.com/en/comps/9/2018-2019/gca/2018-2019-Premier-League-Stats','stats_squads_gca_for','prem_squad_goal_shot_creation','2018-19')
