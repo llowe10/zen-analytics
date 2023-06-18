@@ -4,14 +4,24 @@ import numpy as np
 import json
 import os
 
-# League ID 39 -> Premier League
-# Team ID 50 -> Manchester City
+#######################################################################################################################################
+
+root_endpoint = "https://api-football-v1.p.rapidapi.com/v3"
+
+available_seasons = ['1966', '1972', '1980', '1982', '1986', '1990', '1991', '1992', '1993', '1994', '1995', '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024']
+
 team_map = {
     "Manchester City": 50
 }
 
 league_map = {
-    "UEFA Champions League": 2
+    "UEFA Champions League": 2,
+    "La Liga": 140,
+    "Premier League": 39
+}
+
+player_map = {
+    "E. Haaland": 1100
 }
 
 headers = {
@@ -19,9 +29,30 @@ headers = {
     "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com",
 }
 
+#######################################################################################################################################
+
+def get_available_player_seasons():
+    seasons = []
+    url = root_endpoint + "/players/seasons"
+    response = requests.get(url, headers=headers)
+    for season in response.json()["response"]:
+        seasons.append(str(season))
+    return seasons
+
+def get_current_team_squad(team_id):
+    url = root_endpoint + "/players/squads"
+    querystring = {"team":team_id}
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    players = {}
+
+    for player in response.json()["response"][0]["players"]:
+        players[player["name"]] = player["id"]
+
+    return players
 
 def get_team_statistics(league_id, season, team_id):
-    url = "https://api-football-v1.p.rapidapi.com/v3/teams/statistics"
+    url = root_endpoint + "/teams/statistics"
 
     querystring = {"league": league_id, "season": season, "team": team_id}
 
@@ -51,129 +82,88 @@ def get_team_statistics(league_id, season, team_id):
     # return response.json()["response"]
 
 def get_player_statistics(id, season):
-    url = "https://api-football-v1.p.rapidapi.com/v3/players"
-
+    # path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-playerstats-player' + str(id) + '-' + season + '.xlsx'
+    path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-career-playerstats-' + str(id) + '.xlsx'
+    url = root_endpoint + "/players"
     querystring = {"id":id, "season":season}
-
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    print(response.json())
+    ### set columns ###
+    cols = ['player_name', 'player_firstname', 'player_lastname']
+    for key in response.json()['response'][0]["statistics"][0].keys():
+        for subkey in response.json()['response'][0]["statistics"][0][key]:
+            cols.append(key+'_'+subkey)
+    stats_pd = pd.DataFrame(columns=cols)
 
-    # data = {
-    #     "season": [ season, season, season ],
-    #     "wins": [
-    #         response.json()["response"]["fixtures"]["wins"]["home"],
-    #         response.json()["response"]["fixtures"]["wins"]["away"],
-    #         response.json()["response"]["fixtures"]["wins"]["total"],
-    #     ],
-    #     "played": [
-    #         response.json()["response"]["fixtures"]["played"]["home"],
-    #         response.json()["response"]["fixtures"]["played"]["away"],
-    #         response.json()["response"]["fixtures"]["played"]["total"],
-    #     ]
-    # }
-    # df = pd.DataFrame(data, index=["home", "away", "total"])
+    ### get stat values ###
+    # for player in response.json()['response']:
+    row = {'player_name': response.json()['response'][0]["player"]["name"], 'player_firstname': response.json()['response'][0]["player"]["firstname"], 'player_lastname': response.json()['response'][0]["player"]["lastname"]}
+    for competition in response.json()['response'][0]["statistics"]:
+        for stat_name, stat_dict in competition.items():
+            for stat, val in stat_dict.items():
+                row[stat_name+'_'+stat] = val
+        stats_pd.loc[len(stats_pd)] = row
+    
+    stats_pd.fillna(value=0, inplace=True) # replace None of NaN in same DataFrame
 
-    # print(df)
+    print(stats_pd)
+
+    ### export data
+    if os.path.isfile(path):
+        print("\nadding {0} data for {1} season...".format(id, season))
+        with pd.ExcelWriter(path, mode='a', if_sheet_exists="overlay") as writer:  
+            stats_pd.to_excel(writer, sheet_name='Sheet1', startrow=writer.sheets["Sheet1"].max_row, index=False, header=False)
+    else:
+        print("\ncreating {0} data file with {1} season...".format(id, season))
+        stats_pd.to_excel(path, index=False, header=True)
+    print("...export completed.")
 
 def get_player_statistics_by_team(team, season):
-    path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-playerstats-' + str(team) + '-' + season + '.xlsx'
-
-    url = "https://api-football-v1.p.rapidapi.com/v3/players"
-
+    path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-playerstats-team' + str(team) + '-' + season + '.xlsx'
+    url = root_endpoint + "/players"
     querystring = {"team":team, "season":season}
-
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    stats = pd.DataFrame(columns = [
-                    'Name', 
-                    'Age', 
-                    'Position', 
-                    'Competition', 
-                    'Appearances', 
-                    'Rating',
-                    'Shots', 
-                    'Goals', 
-                    # 'Goal Conversion %', 
-                    'Total Passes', 
-                    'Key Passes', 
-                    'Accurate Passes',
-                    'Tackles',
-                    'Blocks',
-                    'Interceptions',
-                    'Total Duels',
-                    'Duels Won',
-                    'Attempted Dribbles',
-                    'Successful Dribbles',
-                    'Penalties Scored',
-                    'Penalties Missed',
-                    'Penalties Saved'
-                ]
-            )
-    # print(stats)
+    ### set columns ###
+    cols = ['player_name', 'player_firstname', 'player_lastname']
+    for key in response.json()['response'][0]["statistics"][0].keys():
+        for subkey in response.json()['response'][0]["statistics"][0][key]:
+            cols.append(key+'_'+subkey)
+    stats_pd = pd.DataFrame(columns=cols)
 
+    ### get stat values ###
     for player in response.json()['response']:
-        for i in range(0,len(player["statistics"])):
-
-            # try:
-            #     conv_percent = (player["statistics"][i]["goals"]["total"]/player["statistics"][i]["shots"]["total"])*100.0
-            # except ZeroDivisionError:
-            #     conv_percent = 0
-
-            row = {
-                'Name': player["player"]["name"],
-                'Age': player["player"]["age"],
-                'Position': player["statistics"][i]["games"]["position"],
-                'Competition': player["statistics"][i]["league"]["name"],
-                'Appearances': player["statistics"][i]["games"]["appearences"],
-                'Rating': player["statistics"][i]["games"]["rating"],
-                'Shots': player["statistics"][i]["shots"]["total"],
-                'Goals': player["statistics"][i]["goals"]["total"],
-                # 'Goal Conversion %': conv_percent,
-                'Total Passes': player["statistics"][i]["passes"]["total"],
-                'Key Passes': player["statistics"][i]["passes"]["key"],
-                'Accurate Passes': player["statistics"][i]["passes"]["accuracy"],
-                'Tackles': player["statistics"][i]["tackles"]["total"],
-                'Blocks': player["statistics"][i]["tackles"]["blocks"] ,
-                'Interceptions': player["statistics"][i]["tackles"]["interceptions"],
-                'Total Duels': player["statistics"][i]["duels"]["total"],
-                'Duels Won': player["statistics"][i]["duels"]["won"],
-                'Attempted Dribbles': player["statistics"][i]["dribbles"]["attempts"],
-                'Successful Dribbles': player["statistics"][i]["dribbles"]["success"],
-                'Penalties Scored': player["statistics"][i]["penalty"]["scored"],
-                'Penalties Missed': player["statistics"][i]["penalty"]["missed"],
-                'Penalties Saved': player["statistics"][i]["penalty"]["saved"]
-            }
-
-            stats.loc[len(stats)] = row
-            # stats.loc[player["player"]["name"]] = row
-            # print(json.dumps(player, indent=1))
+        row = {'player_name': player["player"]["name"], 'player_firstname': player["player"]["firstname"], 'player_lastname': player["player"]["lastname"]}
+        for competition in player["statistics"]:
+            for stat_name, stat_dict in competition.items():
+                for stat, val in stat_dict.items():
+                    row[stat_name+'_'+stat] = val
+        stats_pd.loc[len(stats_pd)] = row
+    print(stats_pd)
     
     # stats.fillna(value=np.nan, inplace=True)
-    stats.fillna(value=0, inplace=True) # replace None of NaN in same DataFrame
-    # print(stats)
+    stats_pd.fillna(value=0, inplace=True) # replace None of NaN in same DataFrame
 
     ### export data
     if os.path.isfile(path):
         print("\nexporting {0} data for {1} season...".format(team, season))
         with pd.ExcelWriter(path, mode='a', if_sheet_exists="overlay") as writer:  
-            stats.to_excel(writer, sheet_name='Sheet1', startrow=writer.sheets["Sheet1"].max_row, index=False, header=False)
+            stats_pd.to_excel(writer, sheet_name='Sheet1', startrow=writer.sheets["Sheet1"].max_row, index=False, header=False)
     else:
         print("\ncreating {0} data file for {1} season...".format(team, season))
-        stats.to_excel(path, index=False, header=True)
+        stats_pd.to_excel(path, index=False, header=True)
     print("...export completed.")
 
 def get_statistics_by_fixture(file_name, fixture_id):
     path = 'C:/Users/lantz/Documents/My Tableau Repository/Datasources/rapidapi-fixturestats-' + file_name + '.xlsx'
-    url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics"
+    url = root_endpoint + "/fixtures/statistics"
     querystring = {"fixture":fixture_id} 
     response = requests.request("GET", url, headers=headers, params=querystring)
 
     ### set columns ###
     cols = ['Team Name']
-    for team in response.json()['response']:
-        for stat in team["statistics"]:
-            cols.append(stat["type"])
+    for stat in response.json()['response'][0]["statistics"]:
+        cols.append(stat["type"])
     stats_pd = pd.DataFrame(columns=cols)
 
     ### get stat values ###
@@ -200,8 +190,22 @@ def get_statistics_by_fixture(file_name, fixture_id):
 #######################################################################################################################################
 
 if __name__ == "__main__":
-    # get_team_statistics("39", "2020", "50")
-    # get_player_statistics_by_team(team_map["Manchester City"], "2019")
+    # print(get_available_player_seasons())
 
-    # 1027909 : 2023 UEFA Champions League Final
-    get_statistics_by_fixture("2023_UCL_Final", "1027909")
+    # get_team_statistics("39", "2020", "50")
+
+    ### Get team squad ###
+    # squad = get_current_team_squad(team_map["Manchester City"])
+    # print(squad)
+
+    ### Get individual player statistics by season ###
+    # seasons = ["2018","2019","2020","2021","2022"]
+    # for season in seasons:
+    #     get_player_statistics(player_map["E. Haaland"], season)
+
+    ### Player statistics by team ###
+    # get_player_statistics_by_team(team_map["Manchester City"], "2022")
+    # get_player_statistics_by_team(team_map["Manchester City"], "2021")
+
+    ### 1027909 : 2023 UEFA Champions League Final ###
+    # get_statistics_by_fixture("2023_UCL_Final", "1027909")
