@@ -190,7 +190,7 @@ def get_statistics_by_fixture(file_name, fixture_id):
 #######################################################################################################################################
 
 if __name__ == "__main__":
-    # print(get_available_player_seasons())
+    print(get_available_player_seasons())
 
     # get_team_statistics("39", "2020", "50")
 
