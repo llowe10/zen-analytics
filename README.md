@@ -1,2 +1,2 @@
 # zen-analytics
-Sports Analytics Application
+Sports Analytics
