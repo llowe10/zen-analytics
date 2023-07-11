@@ -1,17 +1,18 @@
-# py data_sources/rapidapi-api-nba.py
+# python data_sources/rapidapi-api-nba.py
 
 import requests  # pip install requests
 import pandas as pd  # pip install pandas
 import numpy as np # pip install numpy
 import json
 import os
+from datetime import datetime
 
 #######################################################################################################################################
 
 root_endpoint = "https://api-nba-v1.p.rapidapi.com"
 
 headers = {
-	"X-RapidAPI-Key": "",
+	"X-RapidAPI-Key": os.getenv('RAPIDAPI_KEY'),
 	"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
 }
 
@@ -47,7 +48,7 @@ def get_games_by_team(team_id, season):
 		row = {
 			'id': game["id"],
 			'season':game["season"],
-			'date':game["date"]["start"],
+			'date':game["date"]["start"][:-5],
 			'arena':game["arena"]["name"],
 			'homeTeam':game["teams"]["home"]["name"],
 			'homeScore':game["scores"]["home"]["points"],
@@ -60,6 +61,18 @@ def get_games_by_team(team_id, season):
 			row['homeQ{}Points'.format(i+1)] = home_quarter_points[i]
 			row['visitingQ{}Points'.format(i+1)] = visitor_quarter_points[i]
 		stats_pd.loc[len(stats_pd)] = row
+
+	### Convert data types
+	date_format = '%Y-%m-%dT%H:%M:%S'
+	cols = list(stats_pd.columns)
+	for col in cols:
+		if col in ['arena','homeTeam','visitingTeam']:
+			stats_pd[col] = stats_pd[col].astype(str)
+		elif col == 'date':
+			stats_pd[col] = pd.to_datetime(stats_pd[col], format=date_format) # datetime.strptime(str(stats_pd[col]), date_format)
+		else:
+			stats_pd[col] = stats_pd[col].apply(pd.to_numeric)
+	# print(stats_pd.info())
 
 	stats_pd.to_csv(r"C:\Users\lantz\OneDrive\Documents\My Tableau Repository\Datasources\api-nba\hornets_2022_games.csv",index=False)
 	print("{0} season data export for team {1} completed.".format(season,team_id))
