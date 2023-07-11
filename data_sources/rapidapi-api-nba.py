@@ -69,7 +69,7 @@ def get_games_by_team(team_id, season):
 		if col in ['arena','homeTeam','visitingTeam']:
 			stats_pd[col] = stats_pd[col].astype(str)
 		elif col == 'date':
-			stats_pd[col] = pd.to_datetime(stats_pd[col], format=date_format) # datetime.strptime(str(stats_pd[col]), date_format)
+			stats_pd[col] = pd.to_datetime(stats_pd[col], format=date_format)
 		else:
 			stats_pd[col] = stats_pd[col].apply(pd.to_numeric)
 	# print(stats_pd.info())
