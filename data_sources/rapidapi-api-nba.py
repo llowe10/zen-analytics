@@ -11,7 +11,7 @@ import os
 root_endpoint = "https://api-nba-v1.p.rapidapi.com"
 
 headers = {
-	"X-RapidAPI-Key": "fdcd0a1831msh855607adde1935cp19bd72jsn07dca62515d5",
+	"X-RapidAPI-Key": "",
 	"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
 }
 
