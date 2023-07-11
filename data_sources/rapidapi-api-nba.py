@@ -15,7 +15,22 @@ headers = {
 	"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
 }
 
-url = root_endpoint + "/seasons"
-response = requests.get(url, headers=headers)
+team_map = {
+    "Hornets": "5",
+    "Cavs": "7"
+}
 
-print(response.json())
+def get_seasons():
+	url = root_endpoint + "/seasons"
+	response = requests.get(url, headers=headers)
+	print(response.json())
+
+def get_games_by_team(team, season):
+	url = root_endpoint + "/games"
+	querystring = {"team":team, "season":season}
+	response = requests.get(url, headers=headers, params=querystring)
+	print(response.json())
+
+if __name__ == "__main__":
+	# get_seasons()
+	get_games_by_team(team_map["Hornets"], "2022")
