@@ -74,7 +74,8 @@ def get_games_by_team(team_id, season):
 			stats_pd[col] = stats_pd[col].apply(pd.to_numeric)
 	# print(stats_pd.info())
 
-	stats_pd.to_csv(r"C:\Users\lantz\OneDrive\Documents\My Tableau Repository\Datasources\api-nba\hornets_2022_games.csv",index=False)
+	# stats_pd.to_csv(r"C:\Users\lantz\OneDrive\Documents\My Tableau Repository\Datasources\api-nba\hornets_2022_games.csv",index=False) # Laptop
+	stats_pd.to_csv(r"C:\Users\lantz\Documents\My Tableau Repository\Datasources\api-nba\hornets_2022_games.csv",index=False) # Desktop
 	print("{0} season data export for team {1} completed.".format(season,team_id))
 
 def get_team_season_stats(team_id, season):
@@ -87,8 +88,27 @@ def get_game_stats(game_id):
 	url = root_endpoint + "/games/statistics"
 	querystring = {"id":game_id}
 	response = requests.get(url, headers=headers, params=querystring)
-	print(response.json())
+
+	### set columns ###
+	cols = ['teamId','teamName']
+	for key in response.json()['response'][0]["statistics"][0].keys():
+		cols.append(key)
+	stats_pd = pd.DataFrame(columns=cols)
+
+	### get stat values ###
+	for team in response.json()['response']:
+		row = {'teamId': team["team"]["id"], 'teamName': team["team"]["name"]}
+		for stat, val in team["statistics"][0].items():
+			row[stat] = val
+		stats_pd.loc[len(stats_pd)] = row
+	stats_pd.fillna(value=0, inplace=True) # replace None of NaN in same DataFrame
+	print(stats_pd)
+
+	# stats_pd.to_csv(r"C:\Users\lantz\OneDrive\Documents\My Tableau Repository\Datasources\api-nba\hornets_2022_games.csv",index=False) # Laptop
+	stats_pd.to_csv(r"C:\Users\lantz\Documents\My Tableau Repository\Datasources\api-nba\game_stats_{}.csv".format(game_id),index=False) # Desktop
+	print("{0} game data export completed.".format(game_id))
 
 if __name__ == "__main__":
 	# get_seasons()
-	get_games_by_team(team_map["Hornets"], "2022")
+	# get_games_by_team(team_map["Hornets"], "2022")
+	get_game_stats("11274")
