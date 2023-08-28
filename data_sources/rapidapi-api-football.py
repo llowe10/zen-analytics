@@ -25,7 +25,7 @@ player_map = {
 }
 
 headers = {
-    "X-RapidAPI-Key": "",
+    "X-RapidAPI-Key": os.getenv('RAPIDAPI_KEY'),
     "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com",
 }
 
