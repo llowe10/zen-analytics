@@ -1,0 +1,6 @@
+pandas
+soccerdata
+numpy
+scikit-learn
+matplotlib
+streamlit
