@@ -12,7 +12,7 @@ class Predict():
 
     def load_data(self, path) -> pd.DataFrame :
         if os.path.exists(path):
-            stats_pd_data = pd.read_csv(path)
+            stats_pd_data = pd.read_csv(path, index_col=[0,1,2,3], header=[0,1])
             print(f"Read data from {path}")
         else:
             sd.FBref.available_leagues()
@@ -36,7 +36,7 @@ class Predict():
             stats_pd_data = stats_pd.drop(columns=[('nation', ''),('pos', ''),('born', '')])
             stats_pd_data.fillna(value=0, inplace=True)
 
-            stats_pd_data.to_csv(path)
+            stats_pd_data.to_csv(path, index_label=['League', 'Season', 'Team', 'Player'])
             print(f"Successfully created and loaded data to {path}")
 
         return stats_pd_data
@@ -98,3 +98,7 @@ class Predict():
         x_train, y_train, x_test, y_test = self.preprocess(df)
         if self.model == 'Linear Regression':
             self.linear_regression(x_train, y_train, x_test, y_test)
+
+if __name__ == '__main__':
+    predictor = Predict()
+    df = predictor.load_data('C:/Users/lantz/OneDrive/Documents/My Tableau Repository/Datasources/fbref/ENG-Premier-League-18-23.csv')

@@ -5,8 +5,13 @@ predictor = Predict()
 
 try:
     df = predictor.load_data('C:/Users/lantz/OneDrive/Documents/My Tableau Repository/Datasources/fbref/ENG-Premier-League-18-23.csv')
-    data = df.head()
-    st.write("### Data", data.sort_index())
+
+    rows = st.slider('How many rows to display?', 10, len(df), 10)
+    data = df.head(rows)
+
+    st.write("### Data", data.sort_index()) # interactive table
+    # st.table(data.sort_index()) # static table
+
     # countries = st.multiselect(
     #     "Choose countries", list(df.index), ["China", "United States of America"]
     # )
