@@ -10,7 +10,7 @@ try:
     data = df.head(rows)
 
     st.write("### Data", data.sort_index()) # interactive table
-    # st.table(data.sort_index()) # static table
+    st.table(data.sort_index()) # static table
 
     # countries = st.multiselect(
     #     "Choose countries", list(df.index), ["China", "United States of America"]

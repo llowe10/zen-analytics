@@ -33,7 +33,7 @@ class Predict():
                     stats_pd[col] = stats_pd[col].apply(pd.to_numeric)
             print(stats_pd.info())
 
-            stats_pd_data = stats_pd.drop(columns=[('nation', ''),('pos', ''),('born', '')])
+            stats_pd_data = stats_pd.drop(columns=[('nation', ''),('pos', ''),('born', ''),('age', '')])
             stats_pd_data.fillna(value=0, inplace=True)
 
             stats_pd_data.to_csv(path, index_label=['League', 'Season', 'Team', 'Player'])
